@@ -20,7 +20,23 @@ OUTPUT_PATH = "/output/entry.txt"
 
 
 def main() -> int:
-    text = ENTRY.strip()
+    # Validate the raw ENTRY before any normalization: a leading/trailing
+    # space or an embedded newline would silently change the submitted text,
+    # so reject it loudly instead of stripping it away.
+    if ENTRY != ENTRY.strip():
+        print(
+            "error: entry must not start or end with whitespace",
+            file=sys.stderr,
+        )
+        return 1
+    if "\n" in ENTRY or "\r" in ENTRY:
+        print(
+            "error: entry must be exactly one line "
+            "(no newline characters inside the text)",
+            file=sys.stderr,
+        )
+        return 1
+    text = ENTRY
     if not 1 <= len(text) <= 120:
         print(
             f"error: entry is {len(text)} characters, must be 1-120",
@@ -29,9 +45,6 @@ def main() -> int:
         return 1
     if not text or text.isspace():
         print("error: entry must not be only whitespace", file=sys.stderr)
-        return 1
-    if "\n" in text or "\r" in text:
-        print("error: entry must be a single line", file=sys.stderr)
         return 1
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8", newline="\n") as f:
